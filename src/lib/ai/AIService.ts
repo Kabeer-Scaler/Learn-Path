@@ -8,11 +8,24 @@ import {
 } from "@/lib/ai/provider";
 import {
   buildLessonUserPrompt,
-  buildTutorUserPrompt,
   normalizePreferredStyle,
   type LessonMode
 } from "@/lib/ai/promptBuilder";
 import { LESSON_AUTHOR_SYSTEM_PROMPT, SOCRATIC_TUTOR_SYSTEM_PROMPT } from "@/lib/ai/prompts";
+import {
+  buildForbiddenTexts,
+  buildTutorUserPrompt,
+  classifyTutorResponse,
+  resolveTutorStrategy,
+  type TutorStrategy
+} from "@/lib/ai/tutorPolicy";
+
+export {
+  buildForbiddenTexts,
+  classifyTutorResponse,
+  resolveTutorStrategy,
+  type TutorStrategy
+} from "@/lib/ai/tutorPolicy";
 import type {
   AssessmentQuestion,
   Concept,
@@ -684,54 +697,12 @@ export async function generateLessonWithProvider(
   return fallback;
 }
 
-export function classifyTutorResponse({
-  reply,
-  tutorStrategy,
-  message,
-  priorMessages,
-  concept
-}: {
-  reply: string;
-  tutorStrategy: "guiding_question" | "hint" | "explanation";
-  message: string;
-  priorMessages: TutorMessage[];
-  concept: Concept;
-}) {
-  const userTurns = priorMessages.filter((item) => item.role === "user").length;
-  const early = userTurns < 2 && !/give up|final explanation after trying/i.test(message);
-  const revealsLikelyFinalAnswer =
-    /\b0,\s*1,\s*2\b|\bthe answer is\b|\bprints 0\b/i.test(reply);
-  const asksGuidingQuestion = /\?/.test(reply);
-  const tooLong = reply.split(/\s+/).length > 95;
-  const shaming = /obvious|wrong because you|you should know|stupid/i.test(reply);
-  const ignoresConcept =
-    tutorStrategy !== "guiding_question" &&
-    tutorStrategy !== "hint" &&
-    tutorStrategy !== "explanation";
-
-  const valid =
-    !tooLong &&
-    !shaming &&
-    !ignoresConcept &&
-    !(early && tutorStrategy === "explanation") &&
-    !(early && revealsLikelyFinalAnswer) &&
-    (tutorStrategy === "explanation" || asksGuidingQuestion || reply.toLowerCase().includes(concept.name.toLowerCase().split(" ")[0]));
-
+export function safeTutorFallback(practiceStem?: string) {
+  const focus = practiceStem?.trim()
+    ? `about "${practiceStem.trim()}"`
+    : "step by step";
   return {
-    valid,
-    violations: [
-      early && tutorStrategy === "explanation" ? "explains too early" : "",
-      early && revealsLikelyFinalAnswer ? "reveals final answer too early" : "",
-      tooLong ? "too long" : "",
-      shaming ? "shaming language" : "",
-      ignoresConcept ? "invalid strategy" : ""
-    ].filter(Boolean)
-  };
-}
-
-export function safeTutorFallback() {
-  return {
-    reply: "Let's work through it step by step. What do you think happens first?",
+    reply: `Let's work through it ${focus}. What do you think happens first?`,
     tutorStrategy: "guiding_question" as const
   };
 }
@@ -741,77 +712,108 @@ export function generateTutorResponse({
   lessonTitle,
   mastery,
   message,
-  priorMessages
+  priorMessages,
+  requiredStrategy,
+  practiceStem,
+  explanationExcerpt
 }: {
   concept: Concept;
   lessonTitle: string;
   mastery: number;
   message: string;
   priorMessages: TutorMessage[];
+  requiredStrategy: TutorStrategy;
+  practiceStem?: string;
+  explanationExcerpt?: string;
 }) {
-  const userTurns = priorMessages.filter((item) => item.role === "user").length;
-  const asksForFinal = /final|just tell|answer directly|give me the answer/i.test(
-    message
-  );
-  const seemsStuck = /stuck|confused|don't understand|dont understand|hint/i.test(
-    message
-  );
+  const stem = practiceStem?.trim() || `${concept.name.toLowerCase()} in ${lessonTitle}`;
+  const asksForFinal = /final|just tell|answer directly|give me the answer/i.test(message);
 
-  if (userTurns >= 2 || (/explain/i.test(message) && asksForFinal)) {
+  if (requiredStrategy === "explanation") {
+    const context = explanationExcerpt?.trim()
+      ? `Start from the lesson idea: ${explanationExcerpt.trim().slice(0, 200)}`
+      : `Focus on ${concept.name.toLowerCase()}.`;
     return {
-      reply: `Let's unpack ${lessonTitle} step by step. First name what ${concept.name.toLowerCase()} is asking you to notice, then compare the key details in the example. Which clue in the lesson supports your current answer, and which clue challenges it?`,
+      reply: `Let's unpack ${lessonTitle} step by step. ${context} Name what the question is asking, trace each step in order, then check your result against the example.`,
       tutorStrategy: "explanation" as const
+    };
+  }
+
+  if (requiredStrategy === "hint") {
+    return {
+      reply: `Small hint for "${stem}": focus on one line or clue at a time. Which part of the example changes first before the final result?`,
+      tutorStrategy: "hint" as const
     };
   }
 
   if (asksForFinal) {
     return {
-      reply:
-        "Before I tell you directly, let's test your reasoning. What is the first clue in the question that points toward one answer and rules out another?",
+      reply: `Before I answer directly about "${stem}", what is the first clue that points toward one outcome and rules out another?`,
       tutorStrategy: "guiding_question" as const
     };
   }
 
-  if (seemsStuck || mastery < 0.45) {
+  if (mastery < 0.45) {
     return {
-      reply: `Small hint: focus on one line at a time. In this ${concept.name.toLowerCase()} example, which value is created or changed first?`,
-      tutorStrategy: "hint" as const
+      reply: `What do you think happens first in "${stem}", and which detail in the lesson supports that?`,
+      tutorStrategy: "guiding_question" as const
     };
   }
 
   return {
-    reply: `Good question. What do you think happens first in the ${concept.name.toLowerCase()} example, and which line makes that happen?`,
+    reply: `Good question. What do you think happens first in "${stem}", and which line or step makes that happen?`,
     tutorStrategy: "guiding_question" as const
   };
 }
 
-export async function generateTutorResponseWithProvider(args: {
+export type TutorResponseArgs = {
   concept: Concept;
   lessonTitle: string;
   mastery: number;
   message: string;
   priorMessages: TutorMessage[];
   misconception?: string;
+  requiredStrategy: TutorStrategy;
+  forbiddenTexts: string[];
   learningObjective?: string;
   explanationExcerpt?: string;
-  practiceQuestion?: string;
-}) {
-  const fallback = generateTutorResponse(args);
+  practiceStem?: string;
+  quizStems?: string[];
+};
+
+export async function generateTutorResponseWithProvider(args: TutorResponseArgs) {
   const userTurns = args.priorMessages.filter((item) => item.role === "user").length;
-  const userPrompt = buildTutorUserPrompt({
-    subject: args.concept.subject,
-    lessonTitle: args.lessonTitle,
-    conceptName: args.concept.name,
-    mastery: args.mastery,
-    userTurns,
-    misconception: args.misconception,
-    message: args.message,
-    learningObjective: args.learningObjective,
-    explanationExcerpt: args.explanationExcerpt,
-    practiceQuestion: args.practiceQuestion
-  });
+  const fallback = () =>
+    generateTutorResponse({
+      concept: args.concept,
+      lessonTitle: args.lessonTitle,
+      mastery: args.mastery,
+      message: args.message,
+      priorMessages: args.priorMessages,
+      requiredStrategy: args.requiredStrategy,
+      practiceStem: args.practiceStem,
+      explanationExcerpt: args.explanationExcerpt
+    });
+
+  let retryNote: string | undefined;
 
   for (let attempt = 0; attempt < 2; attempt += 1) {
+    const userPrompt = buildTutorUserPrompt({
+      subject: args.concept.subject,
+      lessonTitle: args.lessonTitle,
+      conceptName: args.concept.name,
+      mastery: args.mastery,
+      userTurns,
+      requiredStrategy: args.requiredStrategy,
+      misconception: args.misconception,
+      message: args.message,
+      learningObjective: args.learningObjective,
+      explanationExcerpt: args.explanationExcerpt,
+      practiceStem: args.practiceStem,
+      quizStems: args.quizStems,
+      retryNote
+    });
+
     try {
       const raw = await callLLMJson({
         messages: [
@@ -820,10 +822,26 @@ export async function generateTutorResponseWithProvider(args: {
         ],
         temperature: 0.1
       });
-      if (!raw) return fallback;
+      if (!raw) continue;
       const parsed = JSON.parse(raw) as unknown;
-      if (isTutorPayload(parsed)) return parsed;
-      console.warn("LLM tutor response failed schema validation.");
+      if (!isTutorPayload(parsed)) {
+        console.warn("LLM tutor response failed schema validation.");
+        continue;
+      }
+
+      const policy = classifyTutorResponse({
+        reply: parsed.reply,
+        requiredStrategy: args.requiredStrategy,
+        userTurns,
+        message: args.message,
+        concept: args.concept,
+        forbiddenTexts: args.forbiddenTexts
+      });
+      if (policy.valid) {
+        return { reply: parsed.reply, tutorStrategy: args.requiredStrategy };
+      }
+      retryNote = `avoid ${policy.violations.join(", ")}`;
+      console.warn("LLM tutor reply failed policy", policy.violations);
     } catch (error) {
       console.warn(
         "LLM tutor generation failed",
@@ -832,5 +850,5 @@ export async function generateTutorResponseWithProvider(args: {
     }
   }
 
-  return fallback;
+  return fallback();
 }
