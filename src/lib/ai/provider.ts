@@ -196,13 +196,12 @@ export function isLessonContent(value: unknown): value is LessonContent {
 
 export function isTutorPayload(
   value: unknown
-): value is { reply: string; tutorStrategy: "guiding_question" | "hint" | "explanation" } {
+): value is { reply: string; tutorStrategy?: "guiding_question" | "hint" | "explanation" } {
   if (!value || typeof value !== "object") return false;
   const item = value as { reply?: unknown; tutorStrategy?: unknown };
-  return (
-    typeof item.reply === "string" &&
-    ["guiding_question", "hint", "explanation"].includes(
-      String(item.tutorStrategy)
-    )
+  if (typeof item.reply !== "string") return false;
+  if (item.tutorStrategy === undefined) return true;
+  return ["guiding_question", "hint", "explanation"].includes(
+    String(item.tutorStrategy)
   );
 }

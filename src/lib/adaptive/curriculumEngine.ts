@@ -36,7 +36,8 @@ function moduleTitleFor(score: number, confidence: number, conceptName: string) 
   if (score < 0.5) return `Rebuild ${conceptName}`;
   if (score < 0.75) return `Strengthen ${conceptName}`;
   if (confidence < 0.55) return `Confirm ${conceptName}`;
-  return `Skipped: ${conceptName}`;
+  if (score >= 0.85 && confidence >= 0.7) return `Skipped: ${conceptName}`;
+  return `Practice: ${conceptName}`;
 }
 
 function reasonFor(score: number, confidence: number, conceptName: string) {

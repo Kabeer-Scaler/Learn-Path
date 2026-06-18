@@ -46,42 +46,6 @@ export function buildLessonUserPrompt(ctx: LessonPromptContext) {
   return parts.join("|");
 }
 
-export type TutorPromptContext = {
-  subject: string;
-  lessonTitle: string;
-  conceptName: string;
-  mastery: number;
-  userTurns: number;
-  misconception?: string;
-  message: string;
-  learningObjective?: string;
-  explanationExcerpt?: string;
-  practiceQuestion?: string;
-};
-
-export function buildTutorUserPrompt(ctx: TutorPromptContext) {
-  const parts = [
-    `subject:${ctx.subject}`,
-    `lesson:${ctx.lessonTitle}`,
-    `concept:${ctx.conceptName}`,
-    `mastery:${ctx.mastery.toFixed(2)}`,
-    `userTurns:${ctx.userTurns}`,
-    `misconception:${ctx.misconception ?? "none"}`,
-    `message:${ctx.message}`
-  ];
-  if (ctx.learningObjective?.trim()) {
-    parts.push(`objective:${ctx.learningObjective.trim()}`);
-  }
-  if (ctx.explanationExcerpt?.trim()) {
-    parts.push(`excerpt:${ctx.explanationExcerpt.trim().slice(0, 400)}`);
-  }
-  if (ctx.practiceQuestion?.trim()) {
-    parts.push(`practiceStem:${ctx.practiceQuestion.trim()}`);
-  }
-  parts.push(`output:{"reply":"","tutorStrategy":"guiding_question|hint|explanation"}`);
-  return parts.join("|");
-}
-
 export function buildSubjectDomainUserPrompt(subject: string, guidance: string, retry = false) {
   const base = `subject:${subject}|guidance:${guidance}|concepts:5|output:concepts+questions JSON per schema`;
   return retry ? `${base}|retry:fix validation failures` : base;
