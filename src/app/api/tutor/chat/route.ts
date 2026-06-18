@@ -1,7 +1,9 @@
 import {
+  buildForbiddenTexts,
   classifyTutorResponse,
+  generateTutorResponse,
   generateTutorResponseWithProvider,
-  safeTutorFallback
+  resolveTutorStrategy
 } from "@/lib/ai/AIService";
 import { assertOwnsUser, getAuthenticatedUser, getLessonOwnerId } from "@/lib/auth";
 import { makeId, mutateStore, nowIso } from "@/lib/db/store";
@@ -45,6 +47,15 @@ export async function POST(request: Request) {
       };
       store.tutorMessages.push(userMessage);
 
+      const priorMessages = [...history, userMessage];
+      const userTurns = priorMessages.filter((item) => item.role === "user").length;
+      const message = body.message ?? "";
+      const requiredStrategy = resolveTutorStrategy(userTurns, message);
+      const forbiddenTexts = buildForbiddenTexts(lesson.content);
+      const practiceStem = lesson.content.practiceQuestion.code
+        ? `${lesson.content.practiceQuestion.question} ${lesson.content.practiceQuestion.code}`
+        : lesson.content.practiceQuestion.question;
+
       const mastery =
         store.learnerMastery.find(
           (item) => item.userId === user.id && item.conceptId === lesson.conceptId
@@ -57,21 +68,43 @@ export async function POST(request: Request) {
             item.misconception
         )
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0]?.misconception;
+
       const tutor = await generateTutorResponseWithProvider({
         concept,
         lessonTitle: lesson.title,
         mastery,
-        message: body.message ?? "",
-        priorMessages: [...history, userMessage],
-        misconception: latestMisconception
+        message,
+        priorMessages,
+        misconception: latestMisconception,
+        requiredStrategy,
+        forbiddenTexts,
+        learningObjective: lesson.content.learningObjective,
+        explanationExcerpt: lesson.content.explanation.slice(0, 400),
+        practiceStem,
+        quizStems: lesson.content.quiz.map((question) => question.question)
       });
+
       const policy = classifyTutorResponse({
-        ...tutor,
-        message: body.message ?? "",
-        priorMessages: [...history, userMessage],
-        concept
+        reply: tutor.reply,
+        requiredStrategy,
+        userTurns,
+        message,
+        concept,
+        forbiddenTexts
       });
-      const safeTutor = policy.valid ? tutor : safeTutorFallback();
+      const safeTutor = policy.valid
+        ? tutor
+        : generateTutorResponse({
+            concept,
+            lessonTitle: lesson.title,
+            mastery,
+            message,
+            priorMessages,
+            requiredStrategy,
+            practiceStem,
+            explanationExcerpt: lesson.content.explanation.slice(0, 400)
+          });
+
       const assistantMessage = {
         id: makeId("msg"),
         userId: user.id,
