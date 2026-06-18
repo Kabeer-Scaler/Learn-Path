@@ -23,12 +23,15 @@ const config: Config = {
         ink: "rgb(var(--c-text) / <alpha-value>)",
         muted: "rgb(var(--c-muted-text) / <alpha-value>)",
         accent: "rgb(var(--c-accent) / <alpha-value>)",
+        "accent-strong": "rgb(var(--c-accent-strong) / <alpha-value>)",
         "accent-soft": "rgb(var(--c-accent-soft) / <alpha-value>)",
         highlight: "rgb(var(--c-highlight) / <alpha-value>)",
         "highlight-soft": "rgb(var(--c-highlight-soft) / <alpha-value>)",
         secondary: "rgb(var(--c-secondary) / <alpha-value>)",
         line: "rgb(var(--c-border) / <alpha-value>)",
-        ring: "rgb(var(--c-ring) / <alpha-value>)"
+        ring: "rgb(var(--c-ring) / <alpha-value>)",
+        warn: "rgb(var(--c-warn) / <alpha-value>)",
+        "warn-soft": "rgb(var(--c-warn-soft) / <alpha-value>)"
       },
       boxShadow: {
         soft: "0 18px 60px rgba(94, 100, 114, 0.10)",
