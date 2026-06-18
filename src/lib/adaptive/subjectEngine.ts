@@ -905,7 +905,8 @@ Return JSON only:
 }`
       }
     ],
-    temperature: 0.1
+    temperature: 0.1,
+    maxTokens: 1536
   });
   if (!conceptRaw) return undefined;
 
@@ -938,7 +939,8 @@ Return JSON only:
 }`
         }
       ],
-      temperature: 0.1
+      temperature: 0.1,
+      maxTokens: 1024
     });
     if (!questionRaw) continue;
     const domain = validateGeneratedDomain(subject, {
@@ -1010,7 +1012,8 @@ Rules:
               : `${prompt}|retry:fix validation failures`
         }
       ],
-      temperature: 0.1
+      temperature: 0.1,
+      maxTokens: 4096
     });
     if (!raw) return undefined;
     const domain = validateGeneratedDomain(subject, JSON.parse(raw));
