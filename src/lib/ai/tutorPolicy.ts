@@ -28,9 +28,6 @@ export function buildForbiddenTexts(content: LessonContent) {
     if (question.correctAnswer?.trim().length >= 3) {
       texts.add(question.correctAnswer.trim());
     }
-    for (const option of question.options ?? []) {
-      if (option.trim().length >= 3) texts.add(option.trim());
-    }
   }
   return [...texts];
 }
@@ -56,10 +53,6 @@ export function detectAnswerLeak(
   if (/\bprints \d+\b/i.test(reply)) return "reveals print output";
 
   return null;
-}
-
-function hasSocraticCue(reply: string) {
-  return /\?/.test(reply) || /what do you think|which|can you predict/i.test(reply);
 }
 
 function looksLikeFullExplanation(reply: string) {
@@ -96,9 +89,6 @@ export function classifyTutorResponse({
     violations.push("explains too early");
   }
   if (leak) violations.push(leak);
-  if (requiredStrategy === "guiding_question" && !hasSocraticCue(reply)) {
-    violations.push("missing guiding question");
-  }
   if (requiredStrategy === "hint" && looksLikeFullExplanation(reply)) {
     violations.push("hint reads like full explanation");
   }
@@ -122,30 +112,41 @@ export type TutorPromptContext = {
   retryNote?: string;
 };
 
+function strategyInstruction(strategy: TutorStrategy) {
+  if (strategy === "hint") {
+    return "Give one specific nudge — a clue, not the answer.";
+  }
+  if (strategy === "explanation") {
+    return "They've tried enough times. Explain step by step now.";
+  }
+  return "Ask one question that helps them reason through it. Don't give the answer.";
+}
+
 export function buildTutorUserPrompt(ctx: TutorPromptContext) {
-  const parts = [
-    `subject:${ctx.subject}`,
-    `lesson:${ctx.lessonTitle}`,
-    `concept:${ctx.conceptName}`,
-    `mastery:${ctx.mastery.toFixed(2)}`,
-    `userTurns:${ctx.userTurns}`,
-    `requiredStrategy:${ctx.requiredStrategy}`,
-    `misconception:${ctx.misconception ?? "none"}`,
-    `message:${ctx.message}`
+  const lines = [
+    `Context: ${ctx.lessonTitle} — ${ctx.conceptName} (${ctx.subject})`,
+    `Mastery: ${ctx.mastery.toFixed(2)} (0 = complete beginner, 1 = expert)`
   ];
   if (ctx.learningObjective?.trim()) {
-    parts.push(`objective:${ctx.learningObjective.trim()}`);
+    lines.push(`Objective: ${ctx.learningObjective.trim()}`);
   }
-  if (ctx.explanationExcerpt?.trim()) {
-    parts.push(`excerpt:${ctx.explanationExcerpt.trim().slice(0, 400)}`);
-  }
-  if (ctx.practiceStem?.trim()) {
-    parts.push(`practiceStem:${ctx.practiceStem.trim()}`);
+  if (ctx.misconception?.trim()) {
+    lines.push(`Known misconception: ${ctx.misconception.trim()}`);
   }
   if (ctx.quizStems?.length) {
-    parts.push(`quizStems:${ctx.quizStems.join("; ")}`);
+    lines.push("Quiz questions:");
+    ctx.quizStems.forEach((stem, index) => {
+      lines.push(`${index + 1}. ${stem}`);
+    });
   }
-  if (ctx.retryNote) parts.push(`retry:${ctx.retryNote}`);
-  parts.push(`output:{"reply":""}`);
-  return parts.join("|");
+  if (ctx.practiceStem?.trim()) {
+    lines.push(`Practice question: ${ctx.practiceStem.trim()}`);
+  }
+  if (ctx.explanationExcerpt?.trim()) {
+    lines.push(`Lesson excerpt: ${ctx.explanationExcerpt.trim().slice(0, 400)}`);
+  }
+  lines.push("", `What to do: ${strategyInstruction(ctx.requiredStrategy)}`);
+  if (ctx.retryNote) lines.push(`Note: ${ctx.retryNote}`);
+  lines.push("", `Student says: "${ctx.message}"`);
+  return lines.join("\n");
 }

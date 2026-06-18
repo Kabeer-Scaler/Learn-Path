@@ -727,42 +727,34 @@ export function generateTutorResponse({
   practiceStem?: string;
   explanationExcerpt?: string;
 }) {
-  const stem = practiceStem?.trim() || `${concept.name.toLowerCase()} in ${lessonTitle}`;
   const asksForFinal = /final|just tell|answer directly|give me the answer/i.test(message);
 
   if (requiredStrategy === "explanation") {
     const context = explanationExcerpt?.trim()
-      ? `Start from the lesson idea: ${explanationExcerpt.trim().slice(0, 200)}`
+      ? explanationExcerpt.trim().slice(0, 200)
       : `Focus on ${concept.name.toLowerCase()}.`;
     return {
-      reply: `Let's unpack ${lessonTitle} step by step. ${context} Name what the question is asking, trace each step in order, then check your result against the example.`,
+      reply: `Let's work through it. ${context} Identify what the question is really asking, then rule out options one by one.`,
       tutorStrategy: "explanation" as const
     };
   }
 
   if (requiredStrategy === "hint") {
     return {
-      reply: `Small hint for "${stem}": focus on one line or clue at a time. Which part of the example changes first before the final result?`,
+      reply: `Focus on just one detail — which option most directly fits the question's exact wording?`,
       tutorStrategy: "hint" as const
     };
   }
 
   if (asksForFinal) {
     return {
-      reply: `Before I answer directly about "${stem}", what is the first clue that points toward one outcome and rules out another?`,
-      tutorStrategy: "guiding_question" as const
-    };
-  }
-
-  if (mastery < 0.45) {
-    return {
-      reply: `What do you think happens first in "${stem}", and which detail in the lesson supports that?`,
+      reply: `Before I give you the full answer, what's one clue that rules out at least one option?`,
       tutorStrategy: "guiding_question" as const
     };
   }
 
   return {
-    reply: `Good question. What do you think happens first in "${stem}", and which line or step makes that happen?`,
+    reply: `What's the first thing you'd look for to decide between those options?`,
     tutorStrategy: "guiding_question" as const
   };
 }
@@ -816,12 +808,17 @@ export async function generateTutorResponseWithProvider(args: TutorResponseArgs)
     });
 
     try {
+      const history = args.priorMessages.slice(0, -1).slice(-6).map((item) => ({
+        role: item.role === "user" ? ("user" as const) : ("assistant" as const),
+        content: item.message
+      }));
       const raw = await callLLMJson({
         messages: [
           { role: "system", content: SOCRATIC_TUTOR_SYSTEM_PROMPT },
+          ...history,
           { role: "user", content: userPrompt }
         ],
-        temperature: 0.1,
+        temperature: 0.7,
         maxTokens: 256
       });
       if (!raw) continue;
