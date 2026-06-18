@@ -64,7 +64,7 @@ export function TutorChat({
   return (
     <aside className="panel flex min-h-[520px] flex-col p-5">
       <div className="flex items-center gap-3 border-b border-line pb-3">
-        <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-powder-blush to-light-blue text-blue-slate shadow-glow animate-pulse-glow">
+        <span className="grid h-10 w-10 place-items-center rounded-xl bg-accent text-bg shadow-soft">
           <Sparkles size={18} aria-hidden />
         </span>
         <div>

@@ -89,16 +89,8 @@ export function ProgressDashboard({
         >
           <div className="relative mt-3 h-2 overflow-hidden rounded-full bg-surface-muted">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-powder-blush via-icy-aqua to-light-blue transition-all duration-1000 ease-out"
+              className="h-full rounded-full bg-accent transition-all duration-1000 ease-out"
               style={{ width: progressMounted ? `${dashboard.overallProgress}%` : "0%" }}
-            />
-            <span
-              aria-hidden
-              className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent"
-              style={{
-                animation: "progress-sweep 2.4s ease-in-out infinite",
-                mixBlendMode: "overlay"
-              }}
             />
           </div>
         </MetricCard>
@@ -287,7 +279,7 @@ function MetricCard({
       style={{ animationDelay: `${index * 80}ms` }}
     >
       <div className={`pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full ${accent} blur-2xl`} />
-      <span className="relative grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-powder-blush/40 to-icy-aqua/40 text-ink shadow-soft">
+      <span className="relative grid h-10 w-10 place-items-center rounded-xl bg-highlight/25 text-accent shadow-soft">
         {icon}
       </span>
       <p className="mt-3 text-sm font-semibold text-muted">{label}</p>

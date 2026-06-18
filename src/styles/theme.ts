@@ -1,11 +1,12 @@
 // Centralised theme tokens. Five-color palette + semantic mappings for light/dark.
+// Palette: warm cream + teal/mint with a terracotta accent (LearnPath AI design).
 
 export const palette = {
-  powderBlush: "#ffa69e",
-  vanillaCream: "#faf3dd",
-  icyAqua: "#b8f2e6",
-  lightBlue: "#aed9e0",
-  blueSlate: "#5e6472"
+  powderBlush: "#c8795c", // warm terracotta — warnings / needs review
+  vanillaCream: "#fff4e1", // cream
+  icyAqua: "#89d7b7", // mint
+  lightBlue: "#428475", // teal (primary accent)
+  blueSlate: "#1a312c" // deep forest green (brand dark)
 } as const;
 
 export type PaletteName = keyof typeof palette;
@@ -28,30 +29,30 @@ export type SemanticTokens = {
 export const lightTheme: SemanticTokens = {
   bg: palette.vanillaCream,
   surface: "#ffffff",
-  surfaceMuted: "#fffaf0",
+  surfaceMuted: "#f5ead2",
   text: palette.blueSlate,
-  mutedText: "#7d8492",
-  accent: palette.powderBlush,
-  accentSoft: "#ffd7d2",
+  mutedText: "#5f7268",
+  accent: palette.lightBlue,
+  accentSoft: "#d9f0e4",
   highlight: palette.icyAqua,
-  highlightSoft: "#d8f7ee",
-  secondary: palette.lightBlue,
-  border: "#e7decf",
-  ring: palette.powderBlush
+  highlightSoft: "#d9f0e4",
+  secondary: "#5dae97",
+  border: "#e7dbc2",
+  ring: palette.lightBlue
 };
 
 export const darkTheme: SemanticTokens = {
-  bg: palette.blueSlate,
-  surface: "#4a4f5a",
-  surfaceMuted: "#404550",
+  bg: "#0e1f19",
+  surface: "#16302a",
+  surfaceMuted: "#1b342c",
   text: palette.vanillaCream,
-  mutedText: "#cfd3da",
-  accent: palette.powderBlush,
-  accentSoft: "#7a4944",
+  mutedText: "#a9c0b4",
+  accent: "#5dae97",
+  accentSoft: "#22382f",
   highlight: palette.icyAqua,
-  highlightSoft: "#3f6963",
-  secondary: palette.lightBlue,
-  border: "#6b7280",
+  highlightSoft: "#22382f",
+  secondary: "#7fcdb4",
+  border: "#2c463d",
   ring: palette.icyAqua
 };
 

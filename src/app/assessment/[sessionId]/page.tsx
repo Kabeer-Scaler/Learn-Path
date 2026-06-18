@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
+import { ArrowRight, CheckCircle2, XCircle, Sparkles } from "lucide-react";
 
 type PublicQuestion = {
   questionId: string;
@@ -23,6 +23,7 @@ export default function AssessmentPage() {
     isCorrect: boolean;
     explanation: string;
     feedback: string;
+    correctAnswer: string;
   }>();
   const [pendingNextQuestion, setPendingNextQuestion] = useState<PublicQuestion>();
   const [pendingComplete, setPendingComplete] = useState(false);
@@ -80,7 +81,8 @@ export default function AssessmentPage() {
     setFeedback({
       isCorrect: payload.isCorrect,
       explanation: payload.explanation,
-      feedback: payload.feedback
+      feedback: payload.feedback,
+      correctAnswer: payload.correctAnswer
     });
     setPendingNextQuestion(payload.nextQuestion);
     setPendingComplete(payload.isComplete);
@@ -133,7 +135,7 @@ export default function AssessmentPage() {
 
         <div className="mb-6 h-3 overflow-hidden rounded-full bg-surface-muted">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-powder-blush via-light-blue to-icy-aqua transition-all duration-500"
+            className="h-full rounded-full bg-accent transition-all duration-500"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -168,13 +170,25 @@ export default function AssessmentPage() {
               <div className="mt-5 grid gap-3">
                 {question.options.map((option) => {
                   const checked = answer === option;
+                  const isCorrectOption =
+                    Boolean(feedback) && option === feedback?.correctAnswer;
+                  const isWrongPick =
+                    Boolean(feedback) && checked && !feedback?.isCorrect;
                   return (
                     <label
                       key={option}
-                      className={`flex cursor-pointer items-center gap-3 rounded-xl border bg-surface px-3.5 py-3 text-sm transition hover:-translate-y-0.5 hover:border-accent hover:shadow-glow ${
-                        checked
-                          ? "border-accent bg-accent/10 shadow-soft"
-                          : "border-line"
+                      className={`flex items-center gap-3 rounded-xl border px-3.5 py-3 text-sm transition ${
+                        feedback
+                          ? "cursor-default"
+                          : "cursor-pointer hover:-translate-y-0.5 hover:border-accent hover:shadow-glow"
+                      } ${
+                        isCorrectOption
+                          ? "border-highlight bg-highlight/15 text-ink"
+                          : isWrongPick
+                            ? "border-warn bg-warn/15 text-ink"
+                            : checked
+                              ? "border-accent bg-accent/10 shadow-soft"
+                              : "border-line bg-surface"
                       }`}
                     >
                       <input
@@ -184,9 +198,15 @@ export default function AssessmentPage() {
                         checked={checked}
                         onChange={(event) => setAnswer(event.target.value)}
                         disabled={Boolean(feedback)}
-                        className="accent-powder-blush"
+                        className="accent-accent"
                       />
-                      <span>{option}</span>
+                      <span className="flex-1">{option}</span>
+                      {isCorrectOption ? (
+                        <CheckCircle2 size={16} className="text-highlight" aria-hidden />
+                      ) : null}
+                      {isWrongPick ? (
+                        <XCircle size={16} className="text-warn" aria-hidden />
+                      ) : null}
                     </label>
                   );
                 })}
@@ -201,6 +221,17 @@ export default function AssessmentPage() {
                   placeholder="Type your answer"
                   disabled={Boolean(feedback)}
                 />
+                {feedback ? (
+                  <span
+                    className={`mt-2 block text-sm font-semibold ${
+                      feedback.isCorrect ? "text-highlight" : "text-warn"
+                    }`}
+                  >
+                    {feedback.isCorrect
+                      ? "Correct"
+                      : `Correct answer: ${feedback.correctAnswer}`}
+                  </span>
+                ) : null}
               </label>
             )}
             {feedback ? (

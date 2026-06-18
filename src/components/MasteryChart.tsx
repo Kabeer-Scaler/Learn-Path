@@ -34,12 +34,12 @@ export function MasteryChart({
     <div className={compact ? "space-y-3" : "space-y-4"}>
       {rows.map((concept, i) => {
         const percent = Math.round(concept.score * 100);
-        const gradient =
+        const barColor =
           percent >= 80
-            ? "from-icy-aqua to-light-blue"
+            ? "bg-highlight"
             : percent >= 60
-              ? "from-light-blue to-powder-blush"
-              : "from-powder-blush to-powder-blush/70";
+              ? "bg-accent"
+              : "bg-warn";
         return (
           <div
             key={concept.id}
@@ -57,17 +57,8 @@ export function MasteryChart({
               aria-label={`${concept.name} mastery ${percent}%`}
             >
               <div
-                className={`h-full rounded-full bg-gradient-to-r ${gradient} transition-all duration-1000 ease-out`}
+                className={`h-full rounded-full ${barColor} transition-all duration-1000 ease-out`}
                 style={{ width: mounted ? `${percent}%` : "0%" }}
-              />
-              <span
-                aria-hidden
-                className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent"
-                style={{
-                  animation: "progress-sweep 2.4s ease-in-out infinite",
-                  animationDelay: `${i * 80}ms`,
-                  mixBlendMode: "overlay"
-                }}
               />
             </div>
           </div>

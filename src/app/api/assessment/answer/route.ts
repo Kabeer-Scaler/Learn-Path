@@ -134,6 +134,7 @@ export async function POST(request: Request) {
         isCorrect: evaluation.isCorrect,
         explanation: question.explanation,
         feedback: evaluation.feedback,
+        correctAnswer: question.correctAnswer,
         nextQuestion: nextQuestion ? publicQuestion(nextQuestion) : undefined,
         isComplete,
         userId: session.userId,

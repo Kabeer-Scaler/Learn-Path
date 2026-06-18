@@ -9,7 +9,8 @@ import {
   CircleHelp,
   ClipboardCheck,
   RotateCcw,
-  Sparkles
+  Sparkles,
+  XCircle
 } from "lucide-react";
 import { TutorChat } from "@/components/TutorChat";
 import type { Concept, Lesson, Module, TutorMessage, User } from "@/lib/types";
@@ -250,11 +251,28 @@ export function LessonExperience({ payload }: { payload: LessonPayload }) {
                       <div className="mt-3 grid gap-2">
                         {question.options.map((option) => {
                           const checked = answers[question.questionId] === option;
+                          const graded = quizResult?.graded.find(
+                            (g) => g.questionId === question.questionId
+                          );
+                          const isCorrectOption =
+                            Boolean(quizResult) && option === question.correctAnswer;
+                          const isWrongPick =
+                            Boolean(quizResult) && checked && graded && !graded.isCorrect;
                           return (
                             <label
                               key={option}
-                              className={`flex cursor-pointer items-center gap-3 rounded-xl border bg-surface px-3 py-2 text-sm transition hover:-translate-y-0.5 hover:border-accent hover:shadow-soft ${
-                                checked ? "border-accent bg-accent/10" : "border-line"
+                              className={`flex items-center gap-3 rounded-xl border px-3 py-2 text-sm transition ${
+                                quizResult
+                                  ? "cursor-default"
+                                  : "cursor-pointer hover:-translate-y-0.5 hover:border-accent hover:shadow-soft"
+                              } ${
+                                isCorrectOption
+                                  ? "border-highlight bg-highlight/15 text-ink"
+                                  : isWrongPick
+                                    ? "border-warn bg-warn/15 text-ink"
+                                    : checked
+                                      ? "border-accent bg-accent/10"
+                                      : "border-line bg-surface"
                               }`}
                             >
                               <input
@@ -262,14 +280,22 @@ export function LessonExperience({ payload }: { payload: LessonPayload }) {
                                 name={question.questionId}
                                 value={option}
                                 checked={checked}
+                                disabled={Boolean(quizResult)}
                                 onChange={(event) =>
                                   setAnswers((items) => ({
                                     ...items,
                                     [question.questionId]: event.target.value
                                   }))
                                 }
+                                className="accent-accent"
                               />
-                              {option}
+                              <span className="flex-1">{option}</span>
+                              {isCorrectOption ? (
+                                <CheckCircle2 size={16} className="text-highlight" aria-hidden />
+                              ) : null}
+                              {isWrongPick ? (
+                                <XCircle size={16} className="text-warn" aria-hidden />
+                              ) : null}
                             </label>
                           );
                         })}
@@ -278,6 +304,7 @@ export function LessonExperience({ payload }: { payload: LessonPayload }) {
                       <input
                         className="input-field"
                         value={answers[question.questionId] ?? ""}
+                        disabled={Boolean(quizResult)}
                         onChange={(event) =>
                           setAnswers((items) => ({
                             ...items,
@@ -292,9 +319,9 @@ export function LessonExperience({ payload }: { payload: LessonPayload }) {
                         {quizResult.graded.find(
                           (item) => item.questionId === question.questionId
                         )?.isCorrect ? (
-                          <p className="font-semibold text-ink">Correct</p>
+                          <p className="font-semibold text-highlight">Correct</p>
                         ) : (
-                          <p className="font-semibold text-accent">
+                          <p className="font-semibold text-warn">
                             Review: {question.correctAnswer}
                           </p>
                         )}

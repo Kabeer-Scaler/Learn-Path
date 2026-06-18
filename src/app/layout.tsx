@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BrainCircuit, LogIn, Map, MessageSquareText } from "lucide-react";
+import { LogIn, Map, MessageSquareText } from "lucide-react";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { PageTransition } from "@/components/PageTransition";
@@ -31,6 +31,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet"
+        />
         <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
       </head>
       <body>
@@ -41,15 +47,18 @@ export default function RootLayout({
                 href="/"
                 className="group flex items-center gap-3 transition hover:opacity-90"
               >
-                <span className="relative grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-powder-blush via-icy-aqua to-light-blue text-blue-slate shadow-glow transition group-hover:scale-105 animate-pulse-glow">
-                  <BrainCircuit size={22} aria-hidden />
+                <span className="relative grid h-11 w-11 place-items-center rounded-2xl bg-blue-slate text-vanilla-cream shadow-soft transition group-hover:scale-105">
+                  <span className="font-display text-2xl font-medium italic leading-none">
+                    L
+                  </span>
+                  <span className="absolute bottom-2 right-2 h-1.5 w-1.5 rounded-full bg-icy-aqua" />
                 </span>
                 <span>
-                  <span className="block text-lg font-extrabold tracking-tight text-gradient-animated">
-                    LearnPath AI
+                  <span className="font-display block text-lg font-semibold tracking-tight text-ink">
+                    LearnPath<span className="italic font-normal text-accent"> AI</span>
                   </span>
-                  <span className="block text-xs font-medium text-muted">
-                    Adaptive AI tutoring platform
+                  <span className="block text-[0.625rem] font-bold uppercase tracking-[0.24em] text-muted">
+                    Learn on your own path
                   </span>
                 </span>
               </Link>
