@@ -675,7 +675,8 @@ export async function generateLessonWithProvider(
         messages: [
           { role: "system", content: LESSON_AUTHOR_SYSTEM_PROMPT },
           { role: "user", content: userPrompt }
-        ]
+        ],
+        maxTokens: 3072
       });
       if (!raw) return fallback;
       const parsed = JSON.parse(raw) as unknown;
@@ -820,7 +821,8 @@ export async function generateTutorResponseWithProvider(args: TutorResponseArgs)
           { role: "system", content: SOCRATIC_TUTOR_SYSTEM_PROMPT },
           { role: "user", content: userPrompt }
         ],
-        temperature: 0.1
+        temperature: 0.1,
+        maxTokens: 256
       });
       if (!raw) continue;
       const parsed = JSON.parse(raw) as unknown;

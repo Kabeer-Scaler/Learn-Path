@@ -7,6 +7,7 @@ type ChatMessage = {
 
 type ChatCompletionResponse = {
   choices?: Array<{
+    finish_reason?: string;
     message?: {
       content?: string;
     };
@@ -85,12 +86,18 @@ export function getAIProvider(): AIProvider {
   return "fallback";
 }
 
+const DEFAULT_LLM_TIMEOUT_MS = 120_000;
+
 export async function callLLMJson({
   messages,
-  temperature = 0.2
+  temperature = 0.2,
+  timeoutMs = DEFAULT_LLM_TIMEOUT_MS,
+  maxTokens
 }: {
   messages: ChatMessage[];
   temperature?: number;
+  timeoutMs?: number;
+  maxTokens?: number;
 }) {
   const config = getProviderConfig();
   if (!config) return undefined;
@@ -113,6 +120,9 @@ export async function callLLMJson({
   if (config.includeModelInBody) {
     body.model = config.model;
   }
+  if (maxTokens !== undefined) {
+    body.max_tokens = maxTokens;
+  }
 
   let lastStatus = 0;
   for (let attempt = 0; attempt < 3; attempt += 1) {
@@ -120,7 +130,7 @@ export async function callLLMJson({
     try {
       response = await fetch(config.url, {
         method: "POST",
-        signal: AbortSignal.timeout(30000),
+        signal: AbortSignal.timeout(timeoutMs),
         headers,
         body: JSON.stringify(body)
       });
@@ -135,8 +145,11 @@ export async function callLLMJson({
           : error instanceof Error
             ? error.message
             : "unknown error";
+      const timedOut = /timeout|aborted/i.test(detail);
       throw new Error(
-        `${label} network error: could not reach the API endpoint (${detail}). Check internet/DNS and AZURE_OPENAI_ENDPOINT.`
+        timedOut
+          ? `${label} request timed out after ${Math.round(timeoutMs / 1000)}s. Large generations can take longer — try again or use a faster deployment.`
+          : `${label} network error: could not reach the API endpoint (${detail}). Check internet/DNS and AZURE_OPENAI_ENDPOINT.`
       );
     }
 
@@ -155,8 +168,12 @@ export async function callLLMJson({
     }
 
     const payload = (await response.json()) as ChatCompletionResponse;
-    const content = payload.choices?.[0]?.message?.content;
+    const choice = payload.choices?.[0];
+    const content = choice?.message?.content;
     if (!content) throw new Error(`${label} returned an empty response.`);
+    if (choice?.finish_reason === "length") {
+      throw new Error(`${label} response truncated at max_tokens cap.`);
+    }
     return content;
   }
 
