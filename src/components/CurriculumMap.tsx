@@ -39,7 +39,7 @@ export function CurriculumMap({ modules }: { modules: ModuleWithLessons[] }) {
             style={{ animationDelay: `${index * 70}ms` }}
           >
             {index < modules.length - 1 ? (
-              <span className="absolute left-[19px] top-10 h-[calc(100%-1rem)] w-px bg-gradient-to-b from-line to-transparent" />
+              <span className="absolute left-[19px] top-10 h-[calc(100%-1rem)] w-px bg-line" />
             ) : null}
             <span
               className={`absolute left-0 top-1 grid h-10 w-10 place-items-center rounded-full border shadow-soft transition ${
@@ -69,8 +69,8 @@ export function CurriculumMap({ modules }: { modules: ModuleWithLessons[] }) {
               </div>
               <div className="relative mt-3 h-1.5 overflow-hidden rounded-full bg-surface-muted">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-powder-blush via-icy-aqua to-light-blue transition-all duration-1000 ease-out"
-                  style={{ width: `${ratio * 100}%`, backgroundSize: "200% 100%" }}
+                  className="h-full rounded-full bg-accent transition-all duration-1000 ease-out"
+                  style={{ width: `${ratio * 100}%` }}
                 />
               </div>
               <div className="mt-4 grid gap-2">

@@ -2,65 +2,62 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Light theme (default) */
+/* Fonts (theme-independent) */
+:root {
+  --font-display: "Spectral", ui-serif, Georgia, "Times New Roman", serif;
+  --font-sans:
+    "Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+}
+
+/* Light theme (default) — flat warm cream + teal/mint */
 :root,
 [data-theme="light"] {
   color-scheme: light;
-  --c-bg: 250 243 221;
+  --c-bg: 255 244 225; /* #FFF4E1 cream */
   --c-surface: 255 255 255;
-  --c-surface-muted: 255 250 240;
-  --c-text: 60 64 78;
-  --c-muted-text: 110 117 132;
-  --c-accent: 255 166 158;
-  --c-accent-soft: 255 215 210;
-  --c-highlight: 184 242 230;
-  --c-highlight-soft: 216 247 238;
-  --c-secondary: 174 217 224;
-  --c-border: 231 222 207;
-  --c-ring: 255 166 158;
-  --aurora-1: 255 166 158;
-  --aurora-2: 184 242 230;
-  --aurora-3: 174 217 224;
-  --aurora-4: 255 215 210;
-  --orb-blend: screen;
-  --grad-page:
-    radial-gradient(at 20% -10%, rgba(255, 166, 158, 0.18), transparent 50%),
-    radial-gradient(at 90% 0%, rgba(184, 242, 230, 0.32), transparent 55%),
-    radial-gradient(at 50% 110%, rgba(174, 217, 224, 0.22), transparent 55%);
+  --c-surface-muted: 245 234 210;
+  --c-text: 26 49 44; /* #1A312C forest */
+  --c-muted-text: 95 114 104;
+  --c-accent: 66 132 117; /* #428475 teal */
+  --c-accent-strong: 53 107 94; /* darker teal — hover */
+  --c-accent-soft: 217 240 228;
+  --c-highlight: 137 215 183; /* #89D7B7 mint */
+  --c-highlight-soft: 217 240 228;
+  --c-secondary: 137 215 183;
+  --c-border: 231 219 194; /* #E7DBC2 */
+  --c-ring: 66 132 117;
+  --c-warn: 200 121 92; /* #C8795C clay — attention/weak only */
+  --c-warn-soft: 244 221 209;
+  --grad-page: none; /* flat — gradients removed */
 }
 
 /*
-  Dark theme — tuned for WCAG AA+ contrast.
-  bg #1e212a (30 33 42)        contrast w/ text (#fbf5e3 ~ 251 245 227) ≈ 14.5:1 (AAA)
-  text 251 245 227 (vanilla)   muted 198 204 218 ≈ 9.4:1 vs bg (AAA)
-  surface 44 48 58, elevated 56 60 72
-  borders 90 96 110 (visible but quiet)
-  Accents slightly brightened for dark backgrounds.
+  Dark theme — deep forest green, tuned for WCAG AA+ contrast.
+  bg #0E1F19 (14 31 25)        contrast w/ text (#FFF4E1 ~ 255 244 225) ≈ 15:1 (AAA)
+  text 255 244 225 (cream)     muted 169 192 180 ≈ 8.5:1 vs bg (AAA)
+  surface 22 48 42, muted 27 52 44
+  borders 44 70 61 (visible but quiet)
+  Accents brightened (mint) for dark backgrounds.
 */
 [data-theme="dark"] {
   color-scheme: dark;
-  --c-bg: 30 33 42;
-  --c-surface: 44 48 58;
-  --c-surface-muted: 56 60 72;
-  --c-text: 251 245 227;
-  --c-muted-text: 198 204 218;
-  --c-accent: 255 184 178;
-  --c-accent-soft: 122 73 68;
-  --c-highlight: 196 246 234;
-  --c-highlight-soft: 63 105 99;
-  --c-secondary: 184 224 232;
-  --c-border: 90 96 110;
-  --c-ring: 196 246 234;
-  --aurora-1: 255 138 128;
-  --aurora-2: 120 220 200;
-  --aurora-3: 130 180 220;
-  --aurora-4: 200 140 220;
-  --orb-blend: plus-lighter;
-  --grad-page:
-    radial-gradient(at 12% -5%, rgba(255, 138, 128, 0.18), transparent 55%),
-    radial-gradient(at 88% 5%, rgba(120, 220, 200, 0.16), transparent 55%),
-    radial-gradient(at 50% 100%, rgba(130, 180, 220, 0.14), transparent 60%),
-    radial-gradient(at 30% 70%, rgba(200, 140, 220, 0.10), transparent 60%);
+  --c-bg: 14 31 25; /* #0E1F19 deepest green */
+  --c-surface: 22 48 42; /* #16302A deep green section */
+  --c-surface-muted: 27 52 44;
+  --c-text: 255 244 225; /* #FFF4E1 beige */
+  --c-muted-text: 169 192 180;
+  --c-accent: 93 174 151; /* #5DAE97 */
+  --c-accent-strong: 137 215 183; /* mint — hover */
+  --c-accent-soft: 44 70 61;
+  --c-highlight: 137 215 183; /* mint */
+  --c-highlight-soft: 34 56 47;
+  --c-secondary: 137 215 183;
+  --c-border: 44 70 61; /* #2C463D */
+  --c-ring: 137 215 183;
+  --c-warn: 221 156 126; /* #DD9C7E clay (dark) */
+  --c-warn-soft: 51 36 28;
+  --grad-page: none;
 }
 
 * {
@@ -77,11 +74,17 @@ body {
   margin: 0;
   background-image: var(--grad-page);
   background-attachment: fixed;
-  font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  font-family: var(--font-sans);
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
   transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+/* Serif display face for headings, matching the design system */
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
 }
 
 a {
@@ -98,8 +101,8 @@ textarea {
 }
 
 ::selection {
-  background: rgb(var(--c-accent));
-  color: #1c1d22;
+  background: rgb(var(--c-highlight));
+  color: #1a312c;
 }
 
 /* Scrollbar polish */
@@ -142,11 +145,7 @@ textarea {
 
   .gradient-card {
     @apply rounded-2xl border border-line p-5 shadow-soft;
-    background: linear-gradient(
-      135deg,
-      rgb(var(--c-surface)) 0%,
-      color-mix(in srgb, rgb(var(--c-highlight)) 22%, rgb(var(--c-surface))) 100%
-    );
+    background: color-mix(in srgb, rgb(var(--c-highlight)) 8%, rgb(var(--c-surface)));
   }
 
   .field-label {
@@ -162,7 +161,7 @@ textarea {
   }
 
   .accent-button {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-powder-blush px-5 py-2.5 text-sm font-semibold text-blue-slate shadow-soft transition hover:-translate-y-0.5 hover:shadow-glow active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-bg shadow-glow transition hover:-translate-y-0.5 hover:bg-accent-strong hover:shadow-glow active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60;
   }
 
   .secondary-button {
@@ -173,10 +172,10 @@ textarea {
     @apply inline-flex min-h-9 items-center justify-center gap-2 rounded-xl px-3 py-1.5 text-sm font-semibold text-ink/80 transition hover:bg-surface-muted hover:text-ink;
   }
 
-  /* Notes — use accent-soft / highlight-soft so dark mode reads well */
+  /* Notes — use warn / highlight / secondary so dark mode reads well */
   .danger-note {
-    @apply rounded-xl border border-accent/50 px-3.5 py-2.5 text-sm text-ink;
-    background: color-mix(in srgb, rgb(var(--c-accent)) 16%, rgb(var(--c-surface)));
+    @apply rounded-xl border border-warn/50 px-3.5 py-2.5 text-sm text-ink;
+    background: color-mix(in srgb, rgb(var(--c-warn)) 22%, rgb(var(--c-surface)));
   }
 
   .success-note {
@@ -222,57 +221,26 @@ textarea {
   }
 
   .hero-gradient {
-    background:
-      radial-gradient(at 10% 0%, rgba(var(--aurora-1), 0.32), transparent 50%),
-      radial-gradient(at 90% 20%, rgba(var(--aurora-2), 0.34), transparent 55%),
-      radial-gradient(at 50% 100%, rgba(var(--aurora-3), 0.26), transparent 60%),
-      rgb(var(--c-surface));
+    background: rgb(var(--c-bg));
   }
 }
 
 @layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  /* Flat — solid color, no gradient text */
   .text-gradient {
-    background: linear-gradient(
-      120deg,
-      rgb(var(--c-accent)) 0%,
-      rgb(var(--c-text)) 45%,
-      rgb(var(--c-secondary)) 100%
-    );
-    background-size: 200% 200%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: rgb(var(--c-accent));
   }
 
   .text-gradient-animated {
-    background: linear-gradient(
-      120deg,
-      rgb(var(--c-accent)) 0%,
-      rgb(var(--c-highlight)) 35%,
-      rgb(var(--c-secondary)) 70%,
-      rgb(var(--c-accent)) 100%
-    );
-    background-size: 220% 220%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    animation: gradient-shift 8s ease-in-out infinite;
+    color: rgb(var(--c-accent));
   }
 
   .shimmer-text {
-    background: linear-gradient(
-      110deg,
-      rgb(var(--c-text)) 0%,
-      rgb(var(--c-text)) 35%,
-      rgb(var(--c-accent)) 50%,
-      rgb(var(--c-text)) 65%,
-      rgb(var(--c-text)) 100%
-    );
-    background-size: 220% 100%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    animation: shimmer 4s linear infinite;
+    color: rgb(var(--c-accent));
   }
 
   .glass {
@@ -294,34 +262,8 @@ textarea {
       0 0 24px -4px rgba(var(--c-accent), 0.35);
   }
 
-  .orb {
-    mix-blend-mode: var(--orb-blend);
-    filter: blur(24px);
-    will-change: transform;
-  }
-
+  /* Flat — button sheen disabled */
   .shimmer-bg {
-    background: linear-gradient(
-      110deg,
-      transparent 0%,
-      rgba(var(--c-accent), 0.25) 45%,
-      rgba(var(--c-highlight), 0.25) 55%,
-      transparent 100%
-    );
-    background-size: 220% 100%;
-    animation: shimmer 2.4s linear infinite;
-  }
-
-  .progress-sweep::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.35),
-      transparent
-    );
-    animation: progress-sweep 2s ease-in-out infinite;
+    background: none;
   }
 }
